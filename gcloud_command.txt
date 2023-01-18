@@ -1,0 +1,22 @@
+export BUCKET="dataflow/test"
+export TEMPLATE_IMAGE="gcr.io/samples/dataflow/streaming-beam:latest"
+export PROJECT="$(gcloud config get-value project)"
+gcloud builds submit --tag "$TEMPLATE_IMAGE"
+ 
+####Templates
+export TEMPLATE_PATH="gs://$BUCKET/samples/dataflow/templates/streaming-beam.json"
+
+gcloud dataflow flex-template build $TEMPLATE_PATH \
+  --image "$TEMPLATE_IMAGE" \
+  --project "$PROJECT" \
+  --sdk-language "PYTHON"\
+  --"enable-streaming-engine" 
+
+#####ACTIVE
+export REGION="us-central1"
+
+gcloud dataflow flex-template run "dataflowtest-`date +%Y%m%d-%H%M%S`" \
+    --template-file-gcs-location "$TEMPLATE_PATH" \
+    --region "$REGION"
+    --dataflow_service_options enable_prime
+    --experiments="upload_graph"
